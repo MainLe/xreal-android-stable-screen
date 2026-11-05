@@ -1,6 +1,16 @@
 {
-  "file": "XREAL-StableScreen-v0.8.1.apk",
+  "repository": "MainLe/xreal-android-stable-screen",
+  "tag": "v0.8.1",
+  "file": "XREAL-StableScreen-v0.8.1-release.apk",
   "version": "0.8.1",
   "bytes": 130943980,
-  "sha256": "e2dc0b1b718628a0c4f401bb19201089b2e91b975acf286f955dd08bc3796b63"
+  "sha256": "23ed41b349da9ea97daea268239005411c52d6611b80cbcb14964e3e04c84337",
+  "build_type": "release",
+  "package": "dev.xreal.stablescreen",
+  "versionCode": 17,
+  "debuggable": false,
+  "certificateSha256": "26676203e2103a95b89c4adf5c482b81b97561484e2d4390c6bc707dcea93fbb",
+  "signing": "existing local development certificate",
+  "signatureVerified": true,
+  "alignment16KiBVerified": true
 }

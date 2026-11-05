@@ -26,7 +26,11 @@ $env:XREAL_JDK = 'C:\Program Files\Java\jdk-17'
 1. 用 Unity 打开工程，等待 `Packages` 解析完成，切换到 Android。使用 **Window > TextMeshPro > Import TMP Essential Resources**，或在 Unity 完成包解析后运行 `python ServerAppResearch/tools/import_tmp_resources.py`。
 2. 本工程保留了一份仅为运行审计候选构建增加条件诊断的 SDK 托管 provider 快照：`sdk-overrides/XREALHandSubsystem.cs`。如需编译项目中的诊断构建，把它复制到 `package/Runtime/Scripts/Android/XREALHandSubsystem.cs`；Stable Screen 不启用 `XREAL_HAND_RUNTIME_AUDIT`，不修改厂商原生跟踪库。
 3. 运行 `python ServerAppResearch/build_hand_compat.py` 生成进程内手部兼容库，再运行 `python ServerAppResearch/prepare_screen_stabilizer.py` 准备本应用使用的显示适配 AAR，并运行 Java 编译/帧邮箱检查。后者还需要 Unity Android Player 的 `classes.jar`，脚本默认查找原工作区使用的 Unity 安装路径；其他安装路径需在脚本中调整该 fallback。
-4. Unity 菜单选择 **XREAL > Build Stable Phone Screen APK**。输出 `Build/Android/XREAL-StableScreen-v0.8.1.apk`。根目录 `Build-Android.ps1` 是较早的 HelloMR 示例构建入口，不是稳屏构建入口。
+4. 在仓库根目录运行 `.\Build-Release.ps1 -UnityEditor '你的 Unity.exe 路径'`。入口 `XREALReleaseBuild.BuildStableScreenRelease` 明确使用 IL2CPP Release，关闭 Development、脚本调试和自动连接 Profiler，结束后恢复这些设置。输出 `Build/Releases/xreal-android-stable-screen/XREAL-StableScreen-v0.8.1-release.apk`。
+
+也可使用原 Unity 菜单 **XREAL > Build Stable Phone Screen APK**，输出 `Build/Android/XREAL-StableScreen-v0.8.1.apk`。根目录 `Build-Android.ps1` 是较早的 HelloMR 示例构建入口，不是稳屏构建入口。
+
+成品见 [Release v0.8.1](https://github.com/MainLe/xreal-android-stable-screen/releases/tag/v0.8.1)，同页提供 `SHA256SUMS`。本次发布保留既有本地开发签名证书，以兼容原客户端安装；它不是应用商店专用签名。构建启动脚本的内存和并发限制只作用于子进程，不更改系统配置。
 
 ## 检查与范围
 
