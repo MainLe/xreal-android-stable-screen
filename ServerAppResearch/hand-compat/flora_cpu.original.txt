@@ -1,0 +1,148 @@
+
+max_queue_size: 10
+input_stream: "IMAGE:image"
+input_stream: "HEADPOSE:head_pose"
+output_stream: "ALL_RESULTS:hand_result"
+
+executor {
+  name: ""
+  options {
+    [mediapipe.ThreadPoolExecutorOptions.ext] {
+      num_threads: 1
+      require_processor_performance: 2
+      thread_name_prefix: "xr_aisdk"
+    }
+  }
+}
+
+node {
+  name: "HandDetectionTrack"
+  calculator: "HandDetTrackCalculator"
+  input_stream: "IMAGE_INPUT:image"
+  input_side_packet: "CAM_INFO_INPUT:cam_info"
+  input_stream: "HEADPOSE:head_pose"
+  output_stream: "DET_BBOX_OUTPUT:detection_output"
+  output_stream: "IMAGE_OUTPUT:image_out"
+  output_stream: "HEADPOSE_OUTPUT:head_pose_out"
+  input_stream_handler {
+    input_stream_handler: "FixedSizeInputStreamHandler"
+    options {
+      [mediapipe.FixedSizeInputStreamHandlerOptions.ext] {
+        trigger_queue_size: 2
+        target_queue_size: 1
+        fixed_min_size: false
+      }
+    }
+  }
+  node_options: {
+    [type.googleapis.com/aisdk.HandDetTrackCalculatorOptions] {
+      model_name: "detect_cpu_flora"
+      enable_track: true
+    }
+  }
+}
+node {
+  name: "DetBoxSmoothing"
+  calculator: "DetectBoxSmoothingCalculator"
+  input_stream: "BBOX_INPUT:detection_output"
+  output_stream: "BBOX_SMOOTHED_OUTPUT:detection_smoothed_output"
+}
+node {
+  name: "MonoBinoSwitch"
+  calculator: "MonoBinoSwitchCalculator"
+  input_stream: "BBOX_IN:detection_smoothed_output"
+  output_stream: "BBOX_OUT:detection_valid"
+  node_options: {
+    [type.googleapis.com/aisdk.MonoBinoSwitchCalculatorOptions] {
+ #BINO, MONO, SWITCH
+      mode: "BINO" 
+    }
+  }
+}
+node {
+  name: "HandLandmark_2D"
+  calculator: "HandLandmarkCalculator"
+  input_stream: "BBOX_SMOOTHED_OUTPUT:detection_valid"
+  input_stream: "IMAGE_INPUT:image_out"
+  input_side_packet: "CAM_INFO_INPUT:cam_info"
+  output_stream: "LANDMARK_OUTPUT:kpt2d"
+  node_options: {
+    [type.googleapis.com/aisdk.HandLandmarkCalculatorOptions] {
+      input_height: 128
+      input_width: 128
+      bbox_expand_ratio: 1.5
+      model_name: "2d_rsnnano"
+    }
+  }
+}
+#node {
+#  name: "LandmarkFilter"
+#  calculator: "LandmarkFilterCalculator"
+#  input_stream: "LANDMARK_INPUT:kpt2d"
+#  output_stream: "LANDMARK_OUTPUT:kpt2d_filter"
+#}
+node {
+  name: "LiftNet_3D"
+  calculator: "HandLiftCalculator"
+  input_side_packet: "CAM_INFO_INPUT:cam_info"
+  input_stream: "LANDMARK_INPUT:kpt2d"
+  output_stream: "LIFT_OUTPUT:kpt3d_bino"
+  node_options: {
+    [type.googleapis.com/aisdk.HandLiftCalculatorOptions] {
+      model_name: "3d_liftnimble"
+    }
+  }
+}
+
+node {
+  name: "BlockHardRules"
+  calculator: "BlockHardRulesCalculator"
+  #input_stream: "kpt3d_mono"
+  input_stream: "kpt3d_bino"
+  output_stream: "BLOCK_OUT:kpt3d_blocked"
+  node_options: {
+    [type.googleapis.com/aisdk.BlockHardRulesCalculatorOptions] {
+      max_root_depth: 1.0
+      # score_th = 0.8 ? model_name == 3d_liftnimble else 0.85
+      score_th: 0.775
+      score_th_width: 0.05
+    }
+  }
+}
+
+
+
+node {
+  name: "ConvertToWorld"
+  calculator: "ConvertToWorldCalculator"
+  input_stream: "INPUT:kpt3d_blocked"
+  input_stream: "HEADPOSE:head_pose_out"
+  output_stream: "OUTPUT:kpt3d_world"
+}
+
+node {
+  name: "GestureRecognition"
+  calculator: "GestureRecognitionCalculator"
+  input_stream: "GR_KPT2D_INPUT:kpt2d"
+  input_stream: "GR_KPT_INPUT:kpt3d_blocked"
+  output_stream: "GR_OUTPUT:gesture"
+}
+node {
+  name: "HandFilter"
+  calculator: "HandFilterCalculator"
+  input_stream: "INPUT:kpt3d_world"
+  output_stream: "OUTPUT:kpt3d_filtered"
+  node_options: {
+    [type.googleapis.com/aisdk.HandFilterCalculatorOptions] {
+      glasses_type: "flora"
+    }
+  }
+}
+
+node {
+  name: "StandardizeKeypoints"
+  calculator: "StandardizeKeypointsCalculator"
+  input_stream: "INPUT_KPT:kpt3d_filtered"
+  input_stream: "INPUT_GR:gesture"
+  output_stream: "OUTPUT:hand_result"
+}

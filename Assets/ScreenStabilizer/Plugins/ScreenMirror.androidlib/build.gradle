@@ -1,0 +1,28 @@
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'dev.xreal.stablescreen.capture'
+    compileSdkVersion 35
+    buildToolsVersion '34.0.0'
+    defaultConfig {
+        minSdkVersion 32
+        targetSdkVersion 35
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+        }
+    }
+}
+
+dependencies {
+    // Runtime implementations are owned and packaged once by the parent Unity library.
+    compileOnly files('../libs/unity-classes.jar')
+    compileOnly files('compileOnly/display-helper.jar')
+}

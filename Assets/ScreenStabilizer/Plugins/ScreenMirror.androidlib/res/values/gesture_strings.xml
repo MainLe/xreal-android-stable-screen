@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="phone_gesture_label">XREAL 稳屏手势操作</string>
+    <string name="phone_gesture_description">在你开启手势操控和整屏投射后，将眼镜识别的捏合动作转成手机点击、长按、滑动，并提供返回、主页和最近任务。不会读取界面节点、输入文字、录音或上传数据。可随时在稳屏中停止操控或在这里关闭服务。</string>
+</resources>
